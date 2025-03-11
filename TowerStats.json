@@ -11027,10 +11027,9 @@
                 "SlowTime": 0.5
             }
         ]
-    }
-	
-	    "Stinky Baby Kitty": {
-        "Type": "Explosion",
+    },
+	"Stinky Baby Kitty": {
+		"Type": "Explosion",
         "Image": "rbxassetid://90343083974928",
         "Rarity": "Uncommon",
         "PlacePrice": 99999,
