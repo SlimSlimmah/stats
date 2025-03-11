@@ -79,7 +79,7 @@
 	"Stinky Baby Kitty": {
 		"Type": "Explosion",
         "Image": "rbxassetid://90343083974928",
-        "Rarity": "Uncommon",
+        "Rarity": "Stinky",
         "PlacePrice": 99999,
         "Offset": 0.45,
         "Max": 1,
