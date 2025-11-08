@@ -1,0 +1,2446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Idle RPG - Character Creation</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 500px;
+      width: 100%;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 1rem;
+      padding: 2rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .subtitle {
+      text-align: center;
+      opacity: 0.9;
+      margin-bottom: 2rem;
+      font-size: 0.875rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    input[type="text"]::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .class-selection {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .class-card {
+      background: rgba(255, 255, 255, 0.1);
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      border-radius: 0.75rem;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+    }
+
+    .class-card:hover {
+      transform: translateY(-5px);
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .class-card.selected {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: #fff;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    }
+
+    .class-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .class-name {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .class-desc {
+      font-size: 0.75rem;
+      opacity: 0.8;
+      line-height: 1.3;
+    }
+
+    .btn-create {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, #3a3a3a 0%, #1a1a1a 100%);
+      border: none;
+      border-radius: 0.75rem;
+      color: #fff;
+      font-size: 1.125rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn-create:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-create:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .error {
+      color: #ff6b6b;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    .error.show {
+      display: block;
+    }
+
+    /* Character List View */
+    .character-list {
+      display: none;
+    }
+
+    .character-list.active {
+      display: block;
+    }
+
+    /* Character Creation View */
+    .character-creation {
+      display: none;
+    }
+
+    .character-creation.active {
+      display: block;
+    }
+
+    .char-slot {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .char-slot:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.4);
+      transform: translateX(5px);
+    }
+
+    .char-slot.empty {
+      border-style: dashed;
+      justify-content: center;
+      opacity: 0.6;
+    }
+
+    .char-slot.empty:hover {
+      opacity: 1;
+    }
+
+    .char-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .char-icon {
+      font-size: 2rem;
+    }
+
+    .char-details h3 {
+      font-size: 1.125rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .char-details p {
+      font-size: 0.875rem;
+      opacity: 0.8;
+    }
+
+    .char-activity {
+      font-size: 0.75rem;
+      color: #4ade80;
+      margin-top: 0.25rem;
+      font-weight: 600;
+    }
+
+    .char-level {
+      font-size: 1.25rem;
+      font-weight: 700;
+      opacity: 0.9;
+    }
+
+    .btn-back {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 1rem;
+      transition: all 0.3s;
+    }
+
+    .btn-back:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .char-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-delete {
+      background: rgba(239, 68, 68, 0.3);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      color: #fff;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-delete:hover {
+      background: rgba(239, 68, 68, 0.5);
+    }
+
+    .locked-slot {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .locked-slot:hover {
+      transform: none;
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .unlock-text {
+      font-size: 0.875rem;
+      opacity: 0.7;
+    }
+
+    /* Game View */
+    .game-view {
+      display: none;
+    }
+
+    .game-view.active {
+      display: block;
+    }
+
+    .game-header {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1rem;
+      border-radius: 0.75rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .player-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .player-icon {
+      font-size: 2.5rem;
+    }
+
+    .player-details h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .player-details p {
+      font-size: 0.875rem;
+      opacity: 0.8;
+    }
+
+    .game-content {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 0.75rem;
+      text-align: center;
+      min-height: 300px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .game-content h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .game-content p {
+      opacity: 0.9;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    /* Game Tabs */
+    .game-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .game-tab {
+      flex: 1;
+      padding: 0.75rem;
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.6);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      border-bottom: 3px solid transparent;
+    }
+
+    .game-tab:hover {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .game-tab.active {
+      color: #fff;
+      border-bottom-color: #fff;
+    }
+
+    .game-tab-content {
+      display: none;
+    }
+
+    .game-tab-content.active {
+      display: block;
+    }
+
+    .tab-title {
+      font-size: 1.25rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    /* Skills Sub-tabs */
+    .skills-sub-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .skills-sub-tab {
+      flex: 1;
+      padding: 0.75rem;
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.6);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      border-bottom: 3px solid transparent;
+      font-size: 0.875rem;
+    }
+
+    .skills-sub-tab:hover {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .skills-sub-tab.active {
+      color: #fff;
+      border-bottom-color: #fff;
+    }
+
+    .skills-sub-content {
+      display: none;
+    }
+
+    .skills-sub-content.active {
+      display: block;
+    }
+
+    /* Skills */
+    .skills-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .skill-section {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 0.75rem;
+      padding: 1rem;
+    }
+
+    .skill-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .skill-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .skill-icon {
+      font-size: 2rem;
+    }
+
+    .skill-name {
+      font-weight: 700;
+      font-size: 1.125rem;
+    }
+
+    .skill-level {
+      font-size: 0.875rem;
+      opacity: 0.8;
+    }
+
+    .skill-xp {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .xp-text {
+      font-size: 0.75rem;
+      margin-bottom: 0.25rem;
+      text-align: right;
+    }
+
+    .xp-bar {
+      height: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 1rem;
+      overflow: hidden;
+    }
+
+    .xp-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4ade80 0%, #22c55e 100%);
+      transition: width 0.3s;
+    }
+
+    .activities {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .activity-btn {
+      flex: 1;
+      min-width: 150px;
+      padding: 0.75rem 1rem;
+      background: rgba(255, 255, 255, 0.15);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 0.5rem;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .activity-btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .activity-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .activity-icon {
+      font-size: 1.5rem;
+    }
+
+    .activity-info {
+      flex: 1;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .activity-name {
+      font-weight: 600;
+    }
+
+    .activity-recipe {
+      font-size: 0.75rem;
+      opacity: 0.7;
+    }
+
+    .activity-time {
+      font-size: 0.875rem;
+      opacity: 0.8;
+    }
+
+    .activity-with-quantity {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .quantity-selector {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0 0.5rem;
+    }
+
+    .quantity-selector label {
+      font-size: 0.75rem;
+      opacity: 0.8;
+      text-transform: none;
+      margin: 0;
+    }
+
+    .quantity-input {
+      width: 60px;
+      padding: 0.25rem 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 0.25rem;
+      color: #fff;
+      font-size: 0.875rem;
+      text-align: center;
+    }
+
+    .quantity-input:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Activity Progress */
+    .activity-progress {
+      background: rgba(255, 255, 255, 0.15);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .progress-header span {
+      font-weight: 700;
+      font-size: 1.125rem;
+    }
+
+    .btn-stop {
+      padding: 0.5rem 1rem;
+      background: rgba(239, 68, 68, 0.3);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      border-radius: 0.5rem;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-stop:hover {
+      background: rgba(239, 68, 68, 0.5);
+    }
+
+    .progress-bar-container {
+      height: 30px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 1rem;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    .progress-text {
+      text-align: center;
+      font-size: 0.875rem;
+      opacity: 0.9;
+    }
+
+    /* Inventory */
+    .inventory-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .inventory-item {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .inventory-item-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .inventory-item-name {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .inventory-item-count {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #4ade80;
+    }
+
+    .coming-soon {
+      text-align: center;
+      padding: 3rem;
+      opacity: 0.7;
+    }
+
+    /* Equipment */
+    .equipment-slots {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0 2rem 0;
+    }
+
+    .equipment-slot {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .equipment-slot.clickable {
+      cursor: pointer;
+    }
+
+    .equipment-slot.clickable:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .slot-label {
+      font-weight: 700;
+      font-size: 1.125rem;
+      margin-bottom: 1rem;
+    }
+
+    .slot-content {
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .slot-empty {
+      opacity: 0.5;
+      font-size: 0.875rem;
+    }
+
+    .equipped-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .equipped-item-icon {
+      font-size: 3rem;
+    }
+
+    .equipped-item-name {
+      font-weight: 600;
+    }
+
+    .btn-unequip {
+      margin-top: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(239, 68, 68, 0.3);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      border-radius: 0.5rem;
+      color: #fff;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-unequip:hover {
+      background: rgba(239, 68, 68, 0.5);
+    }
+
+    .equipment-inventory {
+      margin-top: 2rem;
+    }
+
+    .equipment-inventory h4 {
+      margin-bottom: 1rem;
+      font-size: 1.125rem;
+    }
+
+    .equipment-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .equipment-item {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .equipment-item:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .equipment-item-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .equipment-item-name {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      font-size: 0.875rem;
+    }
+
+    .equipment-item-count {
+      font-size: 0.875rem;
+      color: #4ade80;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: rgba(20, 20, 20, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 1rem;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .modal-header h3 {
+      font-size: 1.25rem;
+      margin: 0;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 2rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.7;
+      transition: opacity 0.3s;
+    }
+
+    .modal-close:hover {
+      opacity: 1;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .modal-equipment-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 1rem;
+    }
+
+    .modal-equipment-item {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .modal-equipment-item:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .modal-equipment-item.equipped {
+      border-color: #4ade80;
+      background: rgba(74, 222, 128, 0.1);
+    }
+
+    .modal-equipment-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .modal-equipment-name {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      font-size: 0.875rem;
+    }
+
+    .modal-equipment-count {
+      font-size: 0.75rem;
+      color: #4ade80;
+    }
+
+    .modal-unequip-btn {
+      width: 100%;
+      padding: 0.75rem;
+      background: rgba(239, 68, 68, 0.3);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      border-radius: 0.5rem;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 1rem;
+      transition: all 0.3s;
+    }
+
+    .modal-unequip-btn:hover {
+      background: rgba(239, 68, 68, 0.5);
+    }
+
+    .modal-empty {
+      text-align: center;
+      padding: 2rem;
+      opacity: 0.7;
+    }
+
+    @media (max-width: 600px) {
+      .skill-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .skill-xp {
+        width: 100%;
+      }
+
+      .xp-text {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Character List View -->
+    <div id="characterList" class="character-list active">
+      <div class="card">
+        <h1>🎮 Idle RPG</h1>
+        <p class="subtitle">Select a character or create a new one</p>
+        
+        <div id="characterSlots"></div>
+      </div>
+    </div>
+
+    <!-- Character Creation View -->
+    <div id="characterCreation" class="character-creation">
+      <div class="card">
+        <button class="btn-back" onclick="showCharacterList()">← Back</button>
+        
+        <h1>Create Character</h1>
+        <p class="subtitle">Choose your path</p>
+
+        <div class="form-group">
+          <label for="characterName">Character Name</label>
+          <input 
+            type="text" 
+            id="characterName" 
+            placeholder="Enter your hero's name..."
+            maxlength="20"
+          >
+          <div id="nameError" class="error">Please enter a character name</div>
+        </div>
+
+        <div class="form-group">
+          <label>Choose Your Class</label>
+          <div class="class-selection">
+            <div class="class-card" data-class="warrior" onclick="selectClass('warrior')">
+              <div class="class-icon">⚔️</div>
+              <div class="class-name">Warrior</div>
+              <div class="class-desc">High HP, melee damage</div>
+            </div>
+            
+            <div class="class-card" data-class="ranger" onclick="selectClass('ranger')">
+              <div class="class-icon">🏹</div>
+              <div class="class-name">Ranger</div>
+              <div class="class-desc">Balanced, ranged attacks</div>
+            </div>
+            
+            <div class="class-card" data-class="mage" onclick="selectClass('mage')">
+              <div class="class-icon">🔮</div>
+              <div class="class-name">Mage</div>
+              <div class="class-desc">High damage, low HP</div>
+            </div>
+          </div>
+          <div id="classError" class="error">Please select a class</div>
+        </div>
+
+        <button class="btn-create" onclick="createCharacter()">
+          Create Character
+        </button>
+      </div>
+    </div>
+
+    <!-- Game View -->
+    <div id="gameView" class="game-view">
+      <div class="card">
+        <button class="btn-back" onclick="showCharacterList()">← Character Select</button>
+        
+        <div class="game-header">
+          <div class="player-info">
+            <div class="player-icon" id="gamePlayerIcon">⚔️</div>
+            <div class="player-details">
+              <h2 id="gamePlayerName">Hero</h2>
+              <p id="gamePlayerClass">Warrior - Level 1</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity Progress (moved above tabs) -->
+        <div id="activityProgress" class="activity-progress" style="display: none;">
+          <div class="progress-header">
+            <span id="progressActivity">Gathering...</span>
+            <button class="btn-stop" onclick="stopGathering()">Stop</button>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar" id="gatheringProgressBar"></div>
+          </div>
+          <div class="progress-text" id="progressText">0.0s / 5.0s</div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="game-tabs">
+          <button class="game-tab active" onclick="switchGameTab('skills')">Skills</button>
+          <button class="game-tab" onclick="switchGameTab('inventory')">Inventory</button>
+          <button class="game-tab" onclick="switchGameTab('equipment')">Equipment</button>
+          <button class="game-tab" onclick="switchGameTab('combat')">Combat</button>
+        </div>
+
+        <!-- Skills Tab -->
+        <div id="skillsTab" class="game-tab-content active">
+          <!-- Skills Sub-tabs -->
+          <div class="skills-sub-tabs">
+            <button class="skills-sub-tab active" onclick="switchSkillsTab('gathering')">Gathering</button>
+            <button class="skills-sub-tab" onclick="switchSkillsTab('processing')">Processing</button>
+          </div>
+
+          <!-- Gathering Sub-tab -->
+          <div id="gatheringSubTab" class="skills-sub-content active">
+            <div class="skills-container">
+            <!-- Woodcutting -->
+            <div class="skill-section">
+              <div class="skill-header">
+                <div class="skill-info">
+                  <span class="skill-icon">🪵</span>
+                  <div>
+                    <div class="skill-name">Woodcutting</div>
+                    <div class="skill-level">Level <span id="woodcuttingLevel">1</span></div>
+                  </div>
+                </div>
+                <div class="skill-xp">
+                  <div class="xp-text"><span id="woodcuttingXP">0</span> / <span id="woodcuttingXPNext">100</span> XP</div>
+                  <div class="xp-bar">
+                    <div class="xp-fill" id="woodcuttingXPBar" style="width: 0%"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="activities">
+                <button class="activity-btn" onclick="startGathering('sticks')">
+                  <span class="activity-icon">🪵</span>
+                  <span class="activity-name">Gather Sticks</span>
+                  <span class="activity-time">5s</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Fishing -->
+            <div class="skill-section">
+              <div class="skill-header">
+                <div class="skill-info">
+                  <span class="skill-icon">🎣</span>
+                  <div>
+                    <div class="skill-name">Fishing</div>
+                    <div class="skill-level">Level <span id="fishingLevel">1</span></div>
+                  </div>
+                </div>
+                <div class="skill-xp">
+                  <div class="xp-text"><span id="fishingXP">0</span> / <span id="fishingXPNext">100</span> XP</div>
+                  <div class="xp-bar">
+                    <div class="xp-fill" id="fishingXPBar" style="width: 0%"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="activities">
+                <button class="activity-btn" onclick="startGathering('minnows')">
+                  <span class="activity-icon">🐟</span>
+                  <span class="activity-name">Catch Minnows</span>
+                  <span class="activity-time">5s</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Mining -->
+            <div class="skill-section">
+              <div class="skill-header">
+                <div class="skill-info">
+                  <span class="skill-icon">⛏️</span>
+                  <div>
+                    <div class="skill-name">Mining</div>
+                    <div class="skill-level">Level <span id="miningLevel">1</span></div>
+                  </div>
+                </div>
+                <div class="skill-xp">
+                  <div class="xp-text"><span id="miningXP">0</span> / <span id="miningXPNext">100</span> XP</div>
+                  <div class="xp-bar">
+                    <div class="xp-fill" id="miningXPBar" style="width: 0%"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="activities">
+                <button class="activity-btn" onclick="startGathering('stones')">
+                  <span class="activity-icon">🪨</span>
+                  <span class="activity-name">Gather Stones</span>
+                  <span class="activity-time">5s</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          </div>
+
+          <!-- Processing Sub-tab -->
+          <div id="processingSubTab" class="skills-sub-content">
+            <div class="skills-container">
+          
+          <!-- Cooking -->
+          <div class="skill-section">
+            <div class="skill-header">
+              <div class="skill-info">
+                <span class="skill-icon">🍳</span>
+                <div>
+                  <div class="skill-name">Cooking</div>
+                  <div class="skill-level">Level <span id="cookingLevel">1</span></div>
+                </div>
+              </div>
+              <div class="skill-xp">
+                <div class="xp-text"><span id="cookingXP">0</span> / <span id="cookingXPNext">100</span> XP</div>
+                <div class="xp-bar">
+                  <div class="xp-fill" id="cookingXPBar" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="activities">
+              <div class="activity-with-quantity">
+                <button class="activity-btn" onclick="startProcessing('cookedMinnows')">
+                  <span class="activity-icon">🍖</span>
+                  <div class="activity-info">
+                    <span class="activity-name">Cook Minnows</span>
+                    <span class="activity-recipe">Requires: 1 🐟</span>
+                  </div>
+                  <span class="activity-time">5s</span>
+                </button>
+                <div class="quantity-selector">
+                  <label for="cookedMinnowsQty">Quantity:</label>
+                  <input type="number" id="cookedMinnowsQty" class="quantity-input" min="1" value="1">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Forging -->
+          <div class="skill-section">
+            <div class="skill-header">
+              <div class="skill-info">
+                <span class="skill-icon">🔨</span>
+                <div>
+                  <div class="skill-name">Forging</div>
+                  <div class="skill-level">Level <span id="forgingLevel">1</span></div>
+                </div>
+              </div>
+              <div class="skill-xp">
+                <div class="xp-text"><span id="forgingXP">0</span> / <span id="forgingXPNext">100</span> XP</div>
+                <div class="xp-bar">
+                  <div class="xp-fill" id="forgingXPBar" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="activities">
+              <div class="activity-with-quantity">
+                <button class="activity-btn" onclick="startProcessing('stoneSword')">
+                  <span class="activity-icon">⚔️</span>
+                  <div class="activity-info">
+                    <span class="activity-name">Forge Stone Sword</span>
+                    <span class="activity-recipe">Requires: 1 🪵, 2 🪨</span>
+                  </div>
+                  <span class="activity-time">10s</span>
+                </button>
+                <div class="quantity-selector">
+                  <label for="stoneSwordQty">Quantity:</label>
+                  <input type="number" id="stoneSwordQty" class="quantity-input" min="1" value="1">
+                </div>
+              </div>
+              <div class="activity-with-quantity">
+                <button class="activity-btn" onclick="startProcessing('stonePickaxe')">
+                  <span class="activity-icon">⛏️</span>
+                  <div class="activity-info">
+                    <span class="activity-name">Forge Stone Pickaxe</span>
+                    <span class="activity-recipe">Requires: 1 🪵, 2 🪨</span>
+                  </div>
+                  <span class="activity-time">10s</span>
+                </button>
+                <div class="quantity-selector">
+                  <label for="stonePickaxeQty">Quantity:</label>
+                  <input type="number" id="stonePickaxeQty" class="quantity-input" min="1" value="1">
+                </div>
+              </div>
+            </div>
+          </div>
+          </div>
+          </div>
+        </div>
+
+        <!-- Inventory Tab -->
+        <div id="inventoryTab" class="game-tab-content">
+          <div class="inventory-grid" id="inventoryGrid">
+            <!-- Inventory items will be populated here -->
+          </div>
+        </div>
+
+        <!-- Equipment Tab -->
+        <div id="equipmentTab" class="game-tab-content">
+          <div class="equipment-slots">
+            <div class="equipment-slot clickable" id="weaponSlot" onclick="openEquipmentSelector('weapon')">
+              <div class="slot-label">⚔️ Weapon</div>
+              <div class="slot-content" id="weaponSlotContent">
+                <div class="slot-empty">Click to equip</div>
+              </div>
+            </div>
+            <div class="equipment-slot clickable" id="toolSlot" onclick="openEquipmentSelector('tool')">
+              <div class="slot-label">🛠️ Tool</div>
+              <div class="slot-content" id="toolSlotContent">
+                <div class="slot-empty">Click to equip</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Equipment Selector Modal -->
+        <div id="equipmentModal" class="modal" onclick="closeEquipmentModal()">
+          <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+              <h3 id="modalTitle">Select Equipment</h3>
+              <button class="modal-close" onclick="closeEquipmentModal()">×</button>
+            </div>
+            <div class="modal-body" id="equipmentModalBody">
+              <!-- Equipment options will be populated here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Combat Tab -->
+        <div id="combatTab" class="game-tab-content">
+          <h3 class="tab-title">⚔️ Combat</h3>
+          <div class="coming-soon">
+            <p>Combat coming soon...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Game State
+    const CLASS_INFO = {
+      warrior: {
+        name: 'Warrior',
+        icon: '⚔️',
+        baseHP: 150,
+        baseDamage: 12,
+        description: 'High HP, melee damage'
+      },
+      ranger: {
+        name: 'Ranger',
+        icon: '🏹',
+        baseHP: 100,
+        baseDamage: 15,
+        description: 'Balanced, ranged attacks'
+      },
+      mage: {
+        name: 'Mage',
+        icon: '🔮',
+        baseHP: 80,
+        baseDamage: 20,
+        description: 'High damage, low HP'
+      }
+    };
+
+    const GATHERING_ACTIVITIES = {
+      sticks: {
+        id: 'sticks',
+        name: 'Gather Sticks',
+        skill: 'woodcutting',
+        duration: 5,
+        icon: '🪵',
+        resourceIcon: '🪵',
+        resourceName: 'Sticks',
+        xpGain: 10
+      },
+      minnows: {
+        id: 'minnows',
+        name: 'Catch Minnows',
+        skill: 'fishing',
+        duration: 5,
+        icon: '🐟',
+        resourceIcon: '🐟',
+        resourceName: 'Minnows',
+        xpGain: 10
+      },
+      stones: {
+        id: 'stones',
+        name: 'Gather Stones',
+        skill: 'mining',
+        duration: 5,
+        icon: '🪨',
+        resourceIcon: '🪨',
+        resourceName: 'Stones',
+        xpGain: 10
+      }
+    };
+
+    const PROCESSING_ACTIVITIES = {
+      cookedMinnows: {
+        id: 'cookedMinnows',
+        name: 'Cook Minnows',
+        skill: 'cooking',
+        duration: 5,
+        icon: '🍖',
+        resourceIcon: '🍖',
+        resourceName: 'Cooked Minnows',
+        xpGain: 15,
+        requires: { minnows: 1 },
+        produces: 1
+      },
+      stoneSword: {
+        id: 'stoneSword',
+        name: 'Forge Stone Sword',
+        skill: 'forging',
+        duration: 10,
+        icon: '⚔️',
+        resourceIcon: '⚔️',
+        resourceName: 'Stone Sword',
+        xpGain: 25,
+        requires: { sticks: 1, stones: 2 },
+        produces: 1,
+        equipmentType: 'weapon'
+      },
+      stonePickaxe: {
+        id: 'stonePickaxe',
+        name: 'Forge Stone Pickaxe',
+        skill: 'forging',
+        duration: 10,
+        icon: '⛏️',
+        resourceIcon: '⛏️',
+        resourceName: 'Stone Pickaxe',
+        xpGain: 25,
+        requires: { sticks: 1, stones: 2 },
+        produces: 1,
+        equipmentType: 'tool'
+      }
+    };
+
+    let gameData = {
+      characters: [],
+      maxSlots: 3,
+      selectedClass: null,
+      currentCharacterId: null
+    };
+
+    let currentActivity = {
+      active: false,
+      activityId: null,
+      activityType: null, // 'gathering' or 'processing'
+      startTime: null,
+      duration: 0,
+      quantity: 1,
+      completed: 0
+    };
+
+    // Load game data
+    function loadGame() {
+      const saved = localStorage.getItem('idleRPGSave');
+      if (saved) {
+        try {
+          gameData = JSON.parse(saved);
+        } catch (e) {
+          console.error('Failed to load save:', e);
+        }
+      }
+    }
+
+    // Save game data
+    function saveGame() {
+      try {
+        localStorage.setItem('idleRPGSave', JSON.stringify(gameData));
+      } catch (e) {
+        console.error('Failed to save:', e);
+      }
+    }
+
+    // Select class
+    function selectClass(className) {
+      gameData.selectedClass = className;
+      
+      // Remove selected from all cards
+      document.querySelectorAll('.class-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      
+      // Add selected to clicked card
+      document.querySelector(`[data-class="${className}"]`).classList.add('selected');
+      
+      // Hide error
+      document.getElementById('classError').classList.remove('show');
+    }
+
+    // Create character
+    function createCharacter() {
+      const nameInput = document.getElementById('characterName');
+      const name = nameInput.value.trim();
+      const selectedClass = gameData.selectedClass;
+      
+      let hasError = false;
+      
+      // Validate name
+      if (!name) {
+        document.getElementById('nameError').classList.add('show');
+        hasError = true;
+      } else {
+        document.getElementById('nameError').classList.remove('show');
+      }
+      
+      // Validate class
+      if (!selectedClass) {
+        document.getElementById('classError').classList.add('show');
+        hasError = true;
+      } else {
+        document.getElementById('classError').classList.remove('show');
+      }
+      
+      if (hasError) return;
+      
+      // Create new character
+      const classInfo = CLASS_INFO[selectedClass];
+      const newCharacter = {
+        id: Date.now(),
+        name: name,
+        class: selectedClass,
+        level: 1,
+        hp: classInfo.baseHP,
+        maxHP: classInfo.baseHP,
+        damage: classInfo.baseDamage,
+        experience: 0,
+        createdAt: Date.now(),
+        skills: {
+          woodcutting: { level: 1, xp: 0 },
+          fishing: { level: 1, xp: 0 },
+          mining: { level: 1, xp: 0 },
+          cooking: { level: 1, xp: 0 },
+          forging: { level: 1, xp: 0 }
+        },
+        inventory: {
+          sticks: 0,
+          minnows: 0,
+          stones: 0,
+          cookedMinnows: 0,
+          stoneSword: 0,
+          stonePickaxe: 0
+        },
+        equipment: {
+          weapon: null,
+          tool: null
+        },
+        currentActivity: null
+      };
+      
+      gameData.characters.push(newCharacter);
+      saveGame();
+      
+      // Reset form
+      nameInput.value = '';
+      gameData.selectedClass = null;
+      document.querySelectorAll('.class-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      
+      // Show character list
+      showCharacterList();
+    }
+
+    // Show character list
+    function showCharacterList() {
+      // Save current character's activity state before leaving
+      saveCharacterActivity();
+      
+      document.getElementById('characterList').classList.add('active');
+      document.getElementById('characterCreation').classList.remove('active');
+      document.getElementById('gameView').classList.remove('active');
+      
+      renderCharacterSlots();
+    }
+
+    // Show character creation
+    function showCharacterCreation() {
+      document.getElementById('characterList').classList.remove('active');
+      document.getElementById('characterCreation').classList.add('active');
+      document.getElementById('gameView').classList.remove('active');
+    }
+
+    // Save current character's activity state
+    function saveCharacterActivity() {
+      const character = getCurrentCharacter();
+      if (!character) return;
+      
+      if (currentActivity.active) {
+        character.currentActivity = {
+          activityId: currentActivity.activityId,
+          activityType: currentActivity.activityType,
+          startTime: currentActivity.startTime,
+          duration: currentActivity.duration,
+          quantity: currentActivity.quantity || 1,
+          completed: currentActivity.completed || 0
+        };
+      } else {
+        character.currentActivity = null;
+      }
+      
+      saveGame();
+    }
+
+    // Load character's activity state
+    function loadCharacterActivity() {
+      const character = getCurrentCharacter();
+      if (!character || !character.currentActivity) {
+        currentActivity = {
+          active: false,
+          activityId: null,
+          activityType: null,
+          startTime: null,
+          duration: 0,
+          quantity: 1,
+          completed: 0
+        };
+        document.getElementById('activityProgress').style.display = 'none';
+        document.querySelectorAll('.activity-btn').forEach(btn => {
+          btn.disabled = false;
+        });
+        return;
+      }
+      
+      // Calculate offline progress
+      const savedActivity = character.currentActivity;
+      const now = Date.now();
+      const timeSinceStart = now - savedActivity.startTime;
+      const completedCycles = Math.floor(timeSinceStart / savedActivity.duration);
+      
+      // Process all completed cycles
+      if (completedCycles > 0) {
+        processOfflineActivity(savedActivity.activityId, savedActivity.activityType, completedCycles);
+      }
+      
+      // Resume the activity from where it should be
+      const timeIntoCurrentCycle = timeSinceStart % savedActivity.duration;
+      currentActivity = {
+        active: true,
+        activityId: savedActivity.activityId,
+        activityType: savedActivity.activityType,
+        startTime: now - timeIntoCurrentCycle,
+        duration: savedActivity.duration,
+        quantity: savedActivity.quantity || 1,
+        completed: savedActivity.completed || 0
+      };
+      
+      // Update UI
+      const activities = savedActivity.activityType === 'gathering' ? GATHERING_ACTIVITIES : PROCESSING_ACTIVITIES;
+      const activity = activities[savedActivity.activityId];
+      document.getElementById('activityProgress').style.display = 'block';
+      
+      if (savedActivity.activityType === 'processing' && savedActivity.quantity > 1) {
+        document.getElementById('progressActivity').textContent = `${activity.name} (${currentActivity.completed}/${currentActivity.quantity})`;
+      } else {
+        document.getElementById('progressActivity').textContent = activity.name;
+      }
+      
+      document.querySelectorAll('.activity-btn').forEach(btn => {
+        btn.disabled = true;
+      });
+    }
+
+    // Process offline activity rewards
+    function processOfflineActivity(activityId, activityType, cycles) {
+      const character = getCurrentCharacter();
+      if (!character) return;
+      
+      if (activityType === 'gathering') {
+        const activity = GATHERING_ACTIVITIES[activityId];
+        if (!activity) return;
+        
+        // Add items
+        character.inventory[activityId] += cycles;
+        
+        // Add XP
+        const skill = activity.skill;
+        character.skills[skill].xp += activity.xpGain * cycles;
+        
+        // Process level ups
+        let levelsGained = 0;
+        while (true) {
+          const xpNeeded = getXPForLevel(character.skills[skill].level + 1);
+          if (character.skills[skill].xp >= xpNeeded) {
+            character.skills[skill].level++;
+            character.skills[skill].xp -= xpNeeded;
+            levelsGained++;
+          } else {
+            break;
+          }
+        }
+        
+        if (levelsGained > 0) {
+          console.log(`${skill} gained ${levelsGained} levels while away!`);
+        }
+      } else if (activityType === 'processing') {
+        const activity = PROCESSING_ACTIVITIES[activityId];
+        if (!activity) return;
+        
+        // Calculate how many we can actually make with available materials
+        let canMake = cycles;
+        for (const [itemId, amount] of Object.entries(activity.requires)) {
+          const maxFromThisItem = Math.floor(character.inventory[itemId] / amount);
+          canMake = Math.min(canMake, maxFromThisItem);
+        }
+        
+        if (canMake > 0) {
+          // Consume materials
+          for (const [itemId, amount] of Object.entries(activity.requires)) {
+            character.inventory[itemId] -= amount * canMake;
+          }
+          
+          // Add produced items
+          character.inventory[activityId] += activity.produces * canMake;
+          
+          // Add XP
+          const skill = activity.skill;
+          character.skills[skill].xp += activity.xpGain * canMake;
+          
+          // Process level ups
+          let levelsGained = 0;
+          while (true) {
+            const xpNeeded = getXPForLevel(character.skills[skill].level + 1);
+            if (character.skills[skill].xp >= xpNeeded) {
+              character.skills[skill].level++;
+              character.skills[skill].xp -= xpNeeded;
+              levelsGained++;
+            } else {
+              break;
+            }
+          }
+          
+          if (levelsGained > 0) {
+            console.log(`${skill} gained ${levelsGained} levels while away!`);
+          }
+        }
+      }
+      
+      saveGame();
+      updateGameUI();
+    }
+
+    // Play with character
+    function playCharacter(characterId) {
+      // Save current character's activity before switching
+      if (gameData.currentCharacterId) {
+        saveCharacterActivity();
+      }
+      
+      const character = gameData.characters.find(c => c.id === characterId);
+      if (!character) return;
+      
+      // Ensure character has skills and inventory
+      if (!character.skills) {
+        character.skills = {
+          woodcutting: { level: 1, xp: 0 },
+          fishing: { level: 1, xp: 0 },
+          mining: { level: 1, xp: 0 },
+          cooking: { level: 1, xp: 0 },
+          forging: { level: 1, xp: 0 }
+        };
+      }
+      // Add new skills if missing
+      if (!character.skills.cooking) character.skills.cooking = { level: 1, xp: 0 };
+      if (!character.skills.forging) character.skills.forging = { level: 1, xp: 0 };
+      
+      if (!character.inventory) {
+        character.inventory = {
+          sticks: 0,
+          minnows: 0,
+          stones: 0,
+          cookedMinnows: 0,
+          stoneSword: 0,
+          stonePickaxe: 0
+        };
+      }
+      // Add new items if missing
+      if (character.inventory.cookedMinnows === undefined) character.inventory.cookedMinnows = 0;
+      if (character.inventory.stoneSword === undefined) character.inventory.stoneSword = 0;
+      if (character.inventory.stonePickaxe === undefined) character.inventory.stonePickaxe = 0;
+      
+      if (!character.equipment) {
+        character.equipment = {
+          weapon: null,
+          tool: null
+        };
+      }
+      
+      gameData.currentCharacterId = characterId;
+      
+      const classInfo = CLASS_INFO[character.class];
+      
+      document.getElementById('gamePlayerIcon').textContent = classInfo.icon;
+      document.getElementById('gamePlayerName').textContent = character.name;
+      document.getElementById('gamePlayerClass').textContent = `${classInfo.name} - Level ${character.level}`;
+      
+      document.getElementById('characterList').classList.remove('active');
+      document.getElementById('characterCreation').classList.remove('active');
+      document.getElementById('gameView').classList.add('active');
+      
+      // Load this character's activity state
+      loadCharacterActivity();
+      
+      updateGameUI();
+    }
+
+    // Switch game tab
+    let activeGameTab = 'skills';
+    function switchGameTab(tab) {
+      activeGameTab = tab;
+      
+      document.querySelectorAll('.game-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.game-tab-content').forEach(t => t.classList.remove('active'));
+      
+      document.querySelector(`[onclick="switchGameTab('${tab}')"]`).classList.add('active');
+      document.getElementById(`${tab}Tab`).classList.add('active');
+      
+      if (tab === 'inventory') {
+        updateInventoryUI();
+      } else if (tab === 'equipment') {
+        updateEquipmentUI();
+      }
+    }
+
+    // Switch skills sub-tab
+    let activeSkillsTab = 'gathering';
+    function switchSkillsTab(tab) {
+      activeSkillsTab = tab;
+      
+      document.querySelectorAll('.skills-sub-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.skills-sub-content').forEach(t => t.classList.remove('active'));
+      
+      document.querySelector(`[onclick="switchSkillsTab('${tab}')"]`).classList.add('active');
+      document.getElementById(`${tab}SubTab`).classList.add('active');
+    }
+
+    // Update game UI with character data
+    function updateGameUI() {
+      const character = getCurrentCharacter();
+      if (!character) return;
+      
+      // Update skills display
+      ['woodcutting', 'fishing', 'mining', 'cooking', 'forging'].forEach(skill => {
+        const skillData = character.skills[skill];
+        const xpNeeded = getXPForLevel(skillData.level + 1);
+        const xpProgress = (skillData.xp / xpNeeded) * 100;
+        
+        document.getElementById(`${skill}Level`).textContent = skillData.level;
+        document.getElementById(`${skill}XP`).textContent = Math.floor(skillData.xp);
+        document.getElementById(`${skill}XPNext`).textContent = xpNeeded;
+        document.getElementById(`${skill}XPBar`).style.width = `${xpProgress}%`;
+      });
+      
+      // Update activity buttons based on available materials
+      updateActivityButtons();
+    }
+
+    // Get XP needed for next level
+    function getXPForLevel(level) {
+      return Math.floor(100 * Math.pow(1.5, level - 1));
+    }
+
+    // Get current character
+    function getCurrentCharacter() {
+      return gameData.characters.find(c => c.id === gameData.currentCharacterId);
+    }
+
+    // Check if character has required materials
+    function hasMaterials(requires) {
+      const character = getCurrentCharacter();
+      if (!character) return false;
+      
+      for (const [itemId, amount] of Object.entries(requires)) {
+        if ((character.inventory[itemId] || 0) < amount) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    // Update activity buttons based on available materials
+    function updateActivityButtons() {
+      const character = getCurrentCharacter();
+      if (!character) return;
+      
+      // Check all processing activities
+      Object.values(PROCESSING_ACTIVITIES).forEach(activity => {
+        const button = document.querySelector(`[onclick="startProcessing('${activity.id}')"]`);
+        if (button) {
+          const canCraft = hasMaterials(activity.requires);
+          if (!canCraft && !currentActivity.active) {
+            button.style.opacity = '0.5';
+            button.style.cursor = 'not-allowed';
+          } else if (!currentActivity.active) {
+            button.style.opacity = '1';
+            button.style.cursor = 'pointer';
+          }
+        }
+      });
+    }
+
+    // Start gathering
+    function startGathering(activityId) {
+      // If already doing this activity, do nothing
+      if (currentActivity.active && currentActivity.activityId === activityId) {
+        return;
+      }
+      
+      const activity = GATHERING_ACTIVITIES[activityId];
+      if (!activity) return;
+      
+      currentActivity = {
+        active: true,
+        activityId: activityId,
+        activityType: 'gathering',
+        startTime: Date.now(),
+        duration: activity.duration * 1000, // Convert to milliseconds
+        quantity: 1, // Gathering always loops indefinitely
+        completed: 0
+      };
+      
+      // Show progress UI
+      document.getElementById('activityProgress').style.display = 'block';
+      document.getElementById('progressActivity').textContent = activity.name;
+      
+      // Disable all activity buttons
+      document.querySelectorAll('.activity-btn').forEach(btn => {
+        btn.disabled = true;
+      });
+    }
+
+    // Start processing
+    function startProcessing(activityId) {
+      // If already doing this activity, do nothing
+      if (currentActivity.active && currentActivity.activityId === activityId) {
+        return;
+      }
+      
+      const activity = PROCESSING_ACTIVITIES[activityId];
+      if (!activity) return;
+      
+      // Get quantity from input
+      const quantityInput = document.getElementById(`${activityId}Qty`);
+      const quantity = quantityInput ? Math.max(1, parseInt(quantityInput.value) || 1) : 1;
+      
+      // Check if player has required materials for the quantity
+      const character = getCurrentCharacter();
+      let maxCanMake = Infinity;
+      for (const [itemId, amount] of Object.entries(activity.requires)) {
+        const available = character.inventory[itemId] || 0;
+        maxCanMake = Math.min(maxCanMake, Math.floor(available / amount));
+      }
+      
+      if (maxCanMake < 1) {
+        return; // Can't make any
+      }
+      
+      // Cap quantity at what we can make
+      const actualQuantity = Math.min(quantity, maxCanMake);
+      
+      currentActivity = {
+        active: true,
+        activityId: activityId,
+        activityType: 'processing',
+        startTime: Date.now(),
+        duration: activity.duration * 1000,
+        quantity: actualQuantity,
+        completed: 0
+      };
+      
+      // Show progress UI
+      document.getElementById('activityProgress').style.display = 'block';
+      document.getElementById('progressActivity').textContent = `${activity.name} (${currentActivity.completed}/${currentActivity.quantity})`;
+      
+      // Disable all activity buttons
+      document.querySelectorAll('.activity-btn').forEach(btn => {
+        btn.disabled = true;
+      });
+    }
+
+    // Stop gathering
+    function stopGathering() {
+      currentActivity.active = false;
+      document.getElementById('activityProgress').style.display = 'none';
+      
+      // Re-enable all activity buttons
+      document.querySelectorAll('.activity-btn').forEach(btn => {
+        btn.disabled = false;
+      });
+      
+      // Update button states for processing activities
+      updateActivityButtons();
+    }
+
+    // Complete gathering or processing
+    function completeActivity() {
+      const character = getCurrentCharacter();
+      if (!character) return;
+      
+      const activityType = currentActivity.activityType;
+      const activityId = currentActivity.activityId;
+      
+      if (activityType === 'gathering') {
+        const activity = GATHERING_ACTIVITIES[activityId];
+        if (!activity) return;
+        
+        // Add item to inventory
+        character.inventory[activityId]++;
+        
+        // Add XP to skill
+        const skill = activity.skill;
+        character.skills[skill].xp += activity.xpGain;
+        
+        // Check for level up
+        const xpNeeded = getXPForLevel(character.skills[skill].level + 1);
+        if (character.skills[skill].xp >= xpNeeded) {
+          character.skills[skill].level++;
+          character.skills[skill].xp -= xpNeeded;
+          console.log(`${skill} leveled up to ${character.skills[skill].level}!`);
+        }
+        
+        // Restart the same activity (loop for gathering)
+        currentActivity.startTime = Date.now();
+        
+      } else if (activityType === 'processing') {
+        const activity = PROCESSING_ACTIVITIES[activityId];
+        if (!activity) return;
+        
+        // Check if player still has materials
+        if (!hasMaterials(activity.requires)) {
+          stopGathering();
+          return;
+        }
+        
+        // Consume materials
+        for (const [itemId, amount] of Object.entries(activity.requires)) {
+          character.inventory[itemId] -= amount;
+        }
+        
+        // Add produced item
+        character.inventory[activityId] += activity.produces;
+        
+        // Add XP to skill
+        const skill = activity.skill;
+        character.skills[skill].xp += activity.xpGain;
+        
+        // Check for level up
+        const xpNeeded = getXPForLevel(character.skills[skill].level + 1);
+        if (character.skills[skill].xp >= xpNeeded) {
+          character.skills[skill].level++;
+          character.skills[skill].xp -= xpNeeded;
+          console.log(`${skill} leveled up to ${character.skills[skill].level}!`);
+        }
+        
+        // Increment completed count
+        currentActivity.completed++;
+        
+        // Check if we've completed the quantity
+        if (currentActivity.completed >= currentActivity.quantity) {
+          stopGathering();
+          return;
+        }
+        
+        // Update progress label
+        document.getElementById('progressActivity').textContent = `${activity.name} (${currentActivity.completed}/${currentActivity.quantity})`;
+        
+        // Restart for next item in quantity
+        currentActivity.startTime = Date.now();
+      }
+      
+      saveGame();
+      updateGameUI();
+      
+      // Update inventory display if on that tab
+      if (activeGameTab === 'inventory') {
+        updateInventoryUI();
+      } else if (activeGameTab === 'equipment') {
+        updateEquipmentUI();
+      }
+    }
+
+    // Update equipment UI
+    function updateEquipmentUI() {
+      const character = getCurrentCharacter();
+      if (!character) return;
+      
+      // Update equipped slots display
+      const weaponSlot = document.getElementById('weaponSlotContent');
+      const toolSlot = document.getElementById('toolSlotContent');
+      
+      if (character.equipment.weapon) {
+        const weaponData = PROCESSING_ACTIVITIES[character.equipment.weapon];
+        weaponSlot.innerHTML = `
+          <div class="equipped-item">
+            <div class="equipped-item-icon">${weaponData.resourceIcon}</div>
+            <div class="equipped-item-name">${weaponData.resourceName}</div>
+          </div>
+        `;
+      } else {
+        weaponSlot.innerHTML = '<div class="slot-empty">Click to equip</div>';
+      }
+      
+      if (character.equipment.tool) {
+        const toolData = PROCESSING_ACTIVITIES[character.equipment.tool];
+        toolSlot.innerHTML = `
+          <div class="equipped-item">
+            <div class="equipped-item-icon">${toolData.resourceIcon}</div>
+            <div class="equipped-item-name">${toolData.resourceName}</div>
+          </div>
+        `;
+      } else {
+        toolSlot.innerHTML = '<div class="slot-empty">Click to equip</div>';
+      }
+    }
+
+    // Open equipment selector modal
+    function openEquipmentSelector(slotType) {
+      const character = getCurrentCharacter();
+      if (!character) return;
+      
+      const modal = document.getElementById('equipmentModal');
+      const modalBody = document.getElementById('equipmentModalBody');
+      const modalTitle = document.getElementById('modalTitle');
+      
+      modalTitle.textContent = slotType === 'weapon' ? 'Select Weapon' : 'Select Tool';
+      
+      // Get available equipment for this slot type
+      const availableEquipment = Object.entries(character.inventory)
+        .filter(([itemId, count]) => {
+          const activity = PROCESSING_ACTIVITIES[itemId];
+          return activity && activity.equipmentType === slotType && count > 0;
+        });
+      
+      let content = '';
+      
+      // Add unequip button if something is equipped
+      if (character.equipment[slotType]) {
+        content += `<button class="modal-unequip-btn" onclick="unequipItemFromModal('${slotType}')">Unequip Current</button>`;
+      }
+      
+      if (availableEquipment.length === 0) {
+        content += `<div class="modal-empty">No ${slotType}s available.<br>Craft some in the Processing tab!</div>`;
+      } else {
+        content += '<div class="modal-equipment-list">';
+        availableEquipment.forEach(([itemId, count]) => {
+          const activity = PROCESSING_ACTIVITIES[itemId];
+          const isEquipped = character.equipment[slotType] === itemId;
+          content += `
+            <div class="modal-equipment-item ${isEquipped ? 'equipped' : ''}" onclick="equipItemFromModal('${itemId}', '${slotType}')">
+              <div class="modal-equipment-icon">${activity.resourceIcon}</div>
+              <div class="modal-equipment-name">${activity.resourceName}</div>
+              <div class="modal-equipment-count">×${count}</div>
+              ${isEquipped ? '<div style="color: #4ade80; font-size: 0.75rem; margin-top: 0.25rem;">✓ Equipped</div>' : ''}
+            </div>
+          `;
+        });
+        content += '</div>';
+      }
+      
+      modalBody.innerHTML = content;
+      modal.classList.add('active');
+    }
+
+    // Close equipment modal
+    function closeEquipmentModal() {
+      document.getElementById('equipmentModal').classList.remove('active');
+    }
+
+    // Equip item from modal
+    function equipItemFromModal(itemId, slotType) {
+      const character = getCurrentCharacter();
+      if (!character) return;
+      
+      const activity = PROCESSING_ACTIVITIES[itemId];
+      if (!activity || activity.equipmentType !== slotType) return;
+      
+      if (character.inventory[itemId] <= 0) return;
+      
+      // Unequip current item if any
+      if (character.equipment[slotType]) {
+        character.inventory[character.equipment[slotType]]++;
+      }
+      
+      // Equip new item
+      character.equipment[slotType] = itemId;
+      character.inventory[itemId]--;
+      
+      saveGame();
+      updateEquipmentUI();
+      closeEquipmentModal();
+    }
+
+    // Unequip item from modal
+    function unequipItemFromModal(slotType) {
+      const character = getCurrentCharacter();
+      if (!character) return;
+      
+      if (!character.equipment[slotType]) return;
+      
+      // Return item to inventory
+      character.inventory[character.equipment[slotType]]++;
+      character.equipment[slotType] = null;
+      
+      saveGame();
+      updateEquipmentUI();
+      closeEquipmentModal();
+    }
+
+    // Equip an item (kept for compatibility)
+    function equipItem(itemId) {
+      const character = getCurrentCharacter();
+      if (!character) return;
+      
+      const activity = PROCESSING_ACTIVITIES[itemId];
+      if (!activity || !activity.equipmentType) return;
+      
+      if (character.inventory[itemId] <= 0) return;
+      
+      const equipmentSlot = activity.equipmentType;
+      
+      // Unequip current item if any
+      if (character.equipment[equipmentSlot]) {
+        character.inventory[character.equipment[equipmentSlot]]++;
+      }
+      
+      // Equip new item
+      character.equipment[equipmentSlot] = itemId;
+      character.inventory[itemId]--;
+      
+      saveGame();
+      updateEquipmentUI();
+    }
+
+    // Unequip an item (kept for compatibility)
+    function unequipItem(slot) {
+      const character = getCurrentCharacter();
+      if (!character) return;
+      
+      if (!character.equipment[slot]) return;
+      
+      // Return item to inventory
+      character.inventory[character.equipment[slot]]++;
+      character.equipment[slot] = null;
+      
+      saveGame();
+      updateEquipmentUI();
+    }
+
+    // Update inventory UI
+    function updateInventoryUI() {
+      const character = getCurrentCharacter();
+      if (!character) return;
+      
+      const inventoryGrid = document.getElementById('inventoryGrid');
+      inventoryGrid.innerHTML = '';
+      
+      // Display only items with quantity > 0
+      const itemsToShow = Object.entries(character.inventory).filter(([itemId, count]) => count > 0);
+      
+      if (itemsToShow.length === 0) {
+        inventoryGrid.innerHTML = '<div class="coming-soon"><p>Your inventory is empty.<br>Start gathering resources!</p></div>';
+        return;
+      }
+      
+      itemsToShow.forEach(([itemId, count]) => {
+        const activity = GATHERING_ACTIVITIES[itemId];
+        if (!activity) return;
+        
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'inventory-item';
+        itemDiv.innerHTML = `
+          <div class="inventory-item-icon">${activity.resourceIcon}</div>
+          <div class="inventory-item-name">${activity.resourceName}</div>
+          <div class="inventory-item-count">${count}</div>
+        `;
+        inventoryGrid.appendChild(itemDiv);
+      });
+    }
+
+    // Game loop
+    let lastActivitySave = 0;
+    let lastCharacterListUpdate = 0;
+    function gameLoop() {
+      const now = Date.now();
+      
+      // Update current character's activity if one is active
+      if (currentActivity.active) {
+        const elapsed = now - currentActivity.startTime;
+        const progress = Math.min(elapsed / currentActivity.duration, 1);
+        
+        // Update progress bar
+        document.getElementById('gatheringProgressBar').style.width = `${progress * 100}%`;
+        document.getElementById('progressText').textContent = 
+          `${(elapsed / 1000).toFixed(1)}s / ${(currentActivity.duration / 1000).toFixed(1)}s`;
+        
+        // Check if complete
+        if (progress >= 1) {
+          completeActivity();
+        }
+        
+        // Save activity state every 10 seconds
+        if (now - lastActivitySave > 10000) {
+          saveCharacterActivity();
+          lastActivitySave = now;
+        }
+      }
+      
+      // Update character list display every 5 seconds if visible
+      if (document.getElementById('characterList').classList.contains('active')) {
+        if (now - lastCharacterListUpdate > 5000) {
+          renderCharacterSlots();
+          lastCharacterListUpdate = now;
+        }
+      }
+    }
+
+    // Start game loop
+    setInterval(gameLoop, 100);
+
+    // Delete character
+    function deleteCharacter(characterId, event) {
+      event.stopPropagation();
+      
+      const character = gameData.characters.find(c => c.id === characterId);
+      if (!character) return;
+      
+      if (confirm(`Are you sure you want to delete ${character.name}?`)) {
+        gameData.characters = gameData.characters.filter(c => c.id !== characterId);
+        saveGame();
+        renderCharacterSlots();
+      }
+    }
+
+    // Render character slots
+    function renderCharacterSlots() {
+      const container = document.getElementById('characterSlots');
+      container.innerHTML = '';
+      
+      // Render existing characters
+      gameData.characters.forEach(character => {
+        const classInfo = CLASS_INFO[character.class];
+        const slot = document.createElement('div');
+        slot.className = 'char-slot';
+        slot.onclick = () => playCharacter(character.id);
+        
+        let activityIndicator = '';
+        if (character.currentActivity) {
+          const activityType = character.currentActivity.activityType || 'gathering';
+          const activities = activityType === 'gathering' ? GATHERING_ACTIVITIES : PROCESSING_ACTIVITIES;
+          const activity = activities[character.currentActivity.activityId];
+          if (activity) {
+            activityIndicator = `<div class="char-activity">🔄 ${activity.name}</div>`;
+          }
+        }
+        
+        slot.innerHTML = `
+          <div class="char-info">
+            <div class="char-icon">${classInfo.icon}</div>
+            <div class="char-details">
+              <h3>${character.name}</h3>
+              <p>${classInfo.name} - Level ${character.level}</p>
+              ${activityIndicator}
+            </div>
+          </div>
+          <div class="char-actions">
+            <div class="char-level">Lv ${character.level}</div>
+            <button class="btn-delete" onclick="deleteCharacter(${character.id}, event)">🗑️</button>
+          </div>
+        `;
+        container.appendChild(slot);
+      });
+      
+      // Render empty/locked slots
+      const remainingSlots = gameData.maxSlots - gameData.characters.length;
+      
+      for (let i = 0; i < remainingSlots; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'char-slot empty';
+        slot.onclick = showCharacterCreation;
+        slot.innerHTML = `
+          <div>
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">➕</div>
+            <div>Create New Character</div>
+          </div>
+        `;
+        container.appendChild(slot);
+      }
+      
+      // Show locked slots (future feature)
+      // For now, let's show one locked slot as an example
+      if (gameData.characters.length === gameData.maxSlots) {
+        const lockedSlot = document.createElement('div');
+        lockedSlot.className = 'char-slot locked-slot';
+        lockedSlot.innerHTML = `
+          <div>
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔒</div>
+            <div class="unlock-text">Unlock at Level 10</div>
+          </div>
+        `;
+        container.appendChild(lockedSlot);
+      }
+    }
+
+    // Initialize
+    loadGame();
+    
+    // Process offline progress for all characters
+    gameData.characters.forEach(character => {
+      if (character.currentActivity) {
+        const now = Date.now();
+        const timeSinceStart = now - character.currentActivity.startTime;
+        const completedCycles = Math.floor(timeSinceStart / character.currentActivity.duration);
+        
+        if (completedCycles > 0) {
+          const activityType = character.currentActivity.activityType || 'gathering'; // Default to gathering for old saves
+          const activityId = character.currentActivity.activityId;
+          
+          if (activityType === 'gathering') {
+            const activity = GATHERING_ACTIVITIES[activityId];
+            if (activity) {
+              character.inventory[activityId] += completedCycles;
+              const skill = activity.skill;
+              character.skills[skill].xp += activity.xpGain * completedCycles;
+              
+              while (true) {
+                const xpNeeded = getXPForLevel(character.skills[skill].level + 1);
+                if (character.skills[skill].xp >= xpNeeded) {
+                  character.skills[skill].level++;
+                  character.skills[skill].xp -= xpNeeded;
+                } else {
+                  break;
+                }
+              }
+            }
+          } else if (activityType === 'processing') {
+            const activity = PROCESSING_ACTIVITIES[activityId];
+            if (activity) {
+              // Calculate how many we can make
+              let canMake = completedCycles;
+              for (const [itemId, amount] of Object.entries(activity.requires)) {
+                const maxFromThisItem = Math.floor(character.inventory[itemId] / amount);
+                canMake = Math.min(canMake, maxFromThisItem);
+              }
+              
+              if (canMake > 0) {
+                for (const [itemId, amount] of Object.entries(activity.requires)) {
+                  character.inventory[itemId] -= amount * canMake;
+                }
+                character.inventory[activityId] += activity.produces * canMake;
+                
+                const skill = activity.skill;
+                character.skills[skill].xp += activity.xpGain * canMake;
+                
+                while (true) {
+                  const xpNeeded = getXPForLevel(character.skills[skill].level + 1);
+                  if (character.skills[skill].xp >= xpNeeded) {
+                    character.skills[skill].level++;
+                    character.skills[skill].xp -= xpNeeded;
+                  } else {
+                    break;
+                  }
+                }
+              }
+            }
+          }
+          
+          // Update the start time to account for completed cycles
+          const timeIntoCurrentCycle = timeSinceStart % character.currentActivity.duration;
+          character.currentActivity.startTime = now - timeIntoCurrentCycle;
+        }
+      }
+    });
+    
+    saveGame();
+    renderCharacterSlots();
+  </script>
+</body>
+</html>
